@@ -1,0 +1,112 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "n8n"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.poe.tasks]
+dev = "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --no-access-log --no-server-header"
+start = "uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log --no-server-header"
+install = [
+  { cmd = "pip install -r requirements.txt" },
+  { cmd = "pre-commit install" }
+]
+lint = [{ cmd = "ruff check app/" }]
+format = [
+  { cmd = "ruff check --fix app/" }, # then apply Ruff fixes (incl. lint & imports)
+]
+clean = [
+  { cmd = "find . -type d -name __pycache__ -exec rm -rf {} +" },
+  { cmd = "find . -type f -name '*.pyc' -delete" },
+]
+test = [{cmd = "pytest -q"}]
+
+
+[tool.black]
+line-length = 88
+exclude = '''
+        /(
+            \.git
+          | \.hg
+          | \.mypy_cache
+          | \.tox
+          | \.venv
+          | _build
+          | buck-out
+          | build
+          | dist
+        )/
+    '''
+
+[tool.ruff]
+# Set the minimum Python version your project supports
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+]
+target-version = "py311"
+line-length = 88 # Matches Black's default, often a good choice
+
+[tool.ruff.lint]
+# Start with a solid base of rules
+select = [
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes errors
+  "N",  # pep8 naming conventions
+  "I",  # isort for import organization
+  "C",  # flake8-comprehensions
+  "B",  # flake8-bugbear
+  "UP", # pyupgrade for modern Python syntax
+]
+# Ignore specific rules that might conflict with your style or FastAPI patterns
+extend-ignore = ["W191", "E101"]
+ignore = [
+  "E501", # Line too long (if you prefer a different line length or use a formatter)
+  "C901", # Too complex (can be ignored for specific complex functions if necessary)
+]
+
+# Configure isort for consistent import ordering
+[tool.ruff.lint.isort]
+order-by-type = true
+relative-imports-order = "closest-to-furthest"
+# Add 'typing' to extra-standard-library if you frequently import from it
+# and want it grouped with standard library imports.
+extra-standard-library = ["typing"]
+
+# This helps prevent Ruff from incorrectly moving imports needed at runtime into type-checking blocks.
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+  "pydantic.main.BaseModel",
+  "fastapi.routing.APIRouter",
+]
+runtime-evaluated-decorators = [
+  "pydantic.decorator.validate_call",
+  "fastapi.routing.APIRouter.get",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+line-ending = "auto"
